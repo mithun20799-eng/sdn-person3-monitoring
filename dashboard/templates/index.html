@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SDN Network Status - Person 3</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header>
+  <h1>NETWORK STATUS</h1>
+  <p>Person 3 — Anomaly Detection, Dashboard & Performance</p>
+</header>
+
+<main>
+  <section class="cards">
+    <article><span>Hosts</span><strong id="hosts">—</strong></article>
+    <article><span>Online</span><strong id="online">—</strong></article>
+    <article><span>Alerts</span><strong id="alertsCount">0</strong></article>
+    <article><span>Max Utilization</span><strong id="maxUtil">—</strong></article>
+  </section>
+
+  <section class="panel">
+    <h2>Traffic / Utilization</h2>
+    <div id="utilization">No Ryu dashboard data yet.</div>
+  </section>
+
+  <section class="grid">
+    <section class="panel">
+      <h2>Recent Alerts</h2>
+      <div id="alerts">No alerts yet.</div>
+    </section>
+    <section class="panel">
+      <h2>UDP Telemetry</h2>
+      <div id="telemetry">No telemetry yet.</div>
+    </section>
+  </section>
+
+  <section class="panel">
+    <h2>Recent Flow Statistics</h2>
+    <pre id="flows">No flow records yet.</pre>
+  </section>
+</main>
+
+<script>
+async function refresh() {
+  try {
+    const res = await fetch('/api/data');
+    const data = await res.json();
+    const dash = data.dashboard || {};
+
+    document.getElementById('hosts').textContent =
+      dash.hosts ?? dash.host_count ?? '—';
+    document.getElementById('online').textContent =
+      dash.online ?? dash.online_hosts ?? '—';
+    document.getElementById('alertsCount').textContent =
+      (data.alerts || []).length;
+
+    const values = [];
+    for (const key of ['utilization_pct', 'utilization', 'max_utilization_pct']) {
+      if (dash[key] != null && !isNaN(Number(dash[key]))) values.push(Number(dash[key]));
+    }
+    document.getElementById('maxUtil').textContent =
+      values.length ? Math.max(...values).toFixed(1) + '%' : '—';
+
+    document.getElementById('utilization').textContent =
+      JSON.stringify(dash, null, 2);
+
+    document.getElementById('alerts').textContent =
+      JSON.stringify((data.alerts || []).slice(-10), null, 2);
+
+    document.getElementById('telemetry').textContent =
+      JSON.stringify((data.telemetry || []).slice(-10), null, 2);
+
+    document.getElementById('flows').textContent =
+      JSON.stringify((data.flows || []).slice(-20), null, 2);
+  } catch (err) {
+    console.error(err);
+  }
+}
+refresh();
+setInterval(refresh, 2000);
+</script>
+</body>
+</html>
