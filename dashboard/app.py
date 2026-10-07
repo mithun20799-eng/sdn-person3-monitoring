@@ -1,13 +1,24 @@
 from __future__ import annotations
 
+import os
 import json
+import os
 from pathlib import Path
 from flask import Flask, jsonify, render_template
 
 from monitoring.ryu_adapter import RyuAdapter
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(os.environ.get("RYU_PROJECT_DIR", Path(__file__).resolve().parent.parent))
+
+RYU_DIR = Path(
+    os.environ.get(
+        "RYU_PROJECT_DIR",
+        BASE_DIR
+    )
+)
+
+adapter = RyuAdapter(RYU_DIR)
 app = Flask(__name__, template_folder="templates", static_folder="static")
 adapter = RyuAdapter(BASE_DIR)
 
